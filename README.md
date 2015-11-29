@@ -1,2 +1,5 @@
-# dodo_algorithm
-dodo的算法之路
+Dodola 的学习笔记
+=======
+
+各种读书笔记
+
