@@ -25,7 +25,7 @@
        * [android-async-http](android/osf/android-async-httpmd.md)
        * [okio](android/osf/okiomd.md)
    * [Dalvik](android/dalvik.md)
-   * Canvas
+   * [Canvas](android/android_canvas.md)
 * [操作系统](cao_zuo_xi_tong.md)
 * [算法](suanfa_md.md)
 * [其他](other/othermd.md)
