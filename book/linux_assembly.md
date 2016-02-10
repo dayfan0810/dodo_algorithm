@@ -26,9 +26,11 @@ IA-32平台寄存器核心组有下面几种.
 
 32位`eax`、ebx、ecx、edx 可以通过16位和8位名称引用
 
+![null][1]
 
 ## 段寄存器
 用于引用内存位置。ia-32处理器允许3种不同的访问系统内存方法：
+
 * 平坦内存模式 所有指令数据堆栈都包含在相同的地址空间中
 * 分段内存模式 把内存划分为独立段的组
 * 实地址内存模式 此模式下所有的段寄存器都指向零线性地址，不会被程序改动。
@@ -50,11 +52,11 @@ EIP寄存器有时称为程序计数器，用于跟踪要执行的下一条指�
 
 ## 控制寄存器
 
-* CR0 控制操作模式和处理器状态的系统标志
-* CR1 没有被使用
-* CR2 内存页面错误信息
-* CR3 内存页面目录信息
-* CR4 支持处理器特性和说明处理器特性能力的标志
+* `CR0` 控制操作模式和处理器状态的系统标志
+* `CR1` 没有被使用
+* `CR2` 内存页面错误信息
+* `CR3` 内存页面目录信息
+* `CR4` 支持处理器特性和说明处理器特性能力的标志
 
 ## 标志
 
@@ -65,15 +67,18 @@ EIP寄存器有时称为程序计数器，用于跟踪要执行的下一条指�
 * 系统标志
 
 ### 状态标志
-1. cf 进位标志 
-2. pf 奇偶校验标志 
+1. `cf` 进位标志 
+2. `pf` 奇偶校验标志 
 用于表明数学操作中结果寄存器是否包含错误数据，如果结果中为1的位的总数是偶数，奇偶校验标志设置为1，否则为0
-3. zf 零标志 如果操作结果为零，零标志就被设置为1，经常用作确定数学操作结果是否为零
-4. af 辅助进位标志 如果寄存器的第三位发生进位或者借位操作，该标志设置为1
-5. sf 符号标志 表明结果是正值还是负值
-6. of 溢出标志 
+3. `zf` 零标志 如果操作结果为零，零标志就被设置为1，经常用作确定数学操作结果是否为零
+4. `af` 辅助进位标志 如果寄存器的第三位发生进位或者借位操作，该标志设置为1
+5. `sf` 符号标志 表明结果是正值还是负值
+6. `of` 溢出标志 
 
 ### 控制标志
+
+Heading
+
 当前只有一个控制标志DF标志，用于控制处理器处理字符串方式。
 当DF设置为1，字符串指令自动递减内存地址到下一个字节，0为递增
 
@@ -88,11 +93,11 @@ EIP寄存器有时称为程序计数器，用于跟踪要执行的下一条指�
 * bss段 声明使用零值初始化的数据元素 常用做程序缓冲区
 * 文本段 每个程序必须有文本段。用于声明指令码
 
+![enter description here][2]
+
 ### 定义段
 `.section`命令语句声明段，有一个参数用于声明段的类型。
 bss段总是在文本段之后
-
-![QQ20160202-0.png](quiver-image-url/0E788C8A99A3F5AF08CD9BA2124881F7.png)
 
 
 ### 定义起始点
@@ -171,14 +176,422 @@ call exit
 **需注意的是，在64位机上编译上面程序需要强制32位编译，用gcc -m32 、as --32选项**
 
 
-使用as编译
+**使用as编译**
+
 ```shell
 as --32 -o printcpu.o printcpu.s
 ld -dynamic-linker /lib/ld-linux.so.2 -o cpu2 -lc printcpu.o
 ./cpu2
 ```
-使用gcc编译
+
+**使用gcc编译**
+使用gcc汇编程序时需要注意gcc连接器查找的是`main`标签作为入口，所以需要将程序的`.globl`命令修改成下面这样
+```assembly
+.section .text
+.globl main
+main:
+```
+
 ```shell
 gcc -m32 -o cpu printcpu.s
 ./cpu
 ```
+
+------------
+# 第五章 传送数据
+## 5.1 定义数据元素
+### 5.1.1 数据段
+程序的数据段是最常见的定义数据元素的位置。 
+使用`.data`指令来声明数据段。在这个段中声明的任何数据元素都保留在内存中并可以被汇编语言程序中的指令读取和写入。
+
+有另一种类型的数据段`.rodata`，该数据段中定义的数据元素只能只读
+
+数据段中定义数据需要两个语句:一个标签、一个命令。
+
+标签相当于c语言的变量名。
+
+命令相当于c语言的类型声明关键字
+
+| 命令    | 数据类型                 |
+| ------- | ------------------------ |
+| .ascii  | 文本字符串               |
+| .asciz  | 以空字符结尾的文本字符串 |
+| .byte   | 字节                     |
+| .double | 双精度浮点数             |
+| .float  | 单精度浮点数             |
+| .int    | 32位整数                 |
+| .long   | 32位整数(和int相同)      |
+| .octa   | 16字节整数               |
+| .quad   | 8字节整数                |
+| .short  | 16位整数                 |
+| .single | 单精度浮点数(和.float相同)|
+
+
+举个栗子:
+```x86asm
+output:
+.ascii "the string example\n"
+pi:
+.float 3.1415926
+;可以在一行里定义多个值
+sizes:
+.long 100,150,200,250,300
+;把长整型(4字节)值100放在sizes引用开始的内存位置中，类似数组，每个长整型占用4个字节 32位，可以通过访问内存位置sizes+8访问200这个值
+```
+
+```x86asm
+.section .data
+msg:
+.ascii "This is a test message"
+factors:
+.double 37.5,45.33,12.30
+height:
+.int 54
+length:
+.int 62,35,47
+```
+下面的图描述了数据在内存中存放的情况
+
+73页图
+
+### 5.1.2 定义静态符号(常量值)
+`.equ`命令用于定义常量值
+
+```x86asm
+.equ factor ,3
+.equ LINUX_SYS_CALL, 0x80
+;引用静态数据元素
+movl $LINUX_SYS_CALL, %eax
+```
+### 5.1.3 bss段
+bss段数据元素和数据段中的定义有些不同，无需声明特定的数据类型。
+
+| 命令   | 描述                             |
+| ------ | -------------------------------- |
+| .comm  | 声明未初始化的数据的通用内存区域 |
+| .lcomm | 声明未初始化的数据的本地通用内存区域|
+
+本地通用内存区域是为不会从本地汇编代码之外进行访问的数据保留的。
+命令格式： `.comm symbol, length`
+例子：待定，未明白
+```x86asm
+.section .bss
+```
+
+## 5.2 传递数据元素
+注：在csapp里对此指令的讲述更好
+`MOV`指令用作通用数据传送指令。用于在内存和寄存器之间传送数据。
+### 5.2.1 mov指令
+`MOV` 基本格式：
+`movx source, dest`
+
+根据数据元素的长度不同movx有以下变种
+
+* movl 用于32位长字值
+* movw 用于16位字值
+* movb 用于8位字节值
+
+把32位eax寄存器值传送给32位ebx寄存器：`movl %eax, %ebx`
+对于16位寄存器：`movw %ax,%bx`
+对于8位寄存器：`movb %al,%bl`
+
+mov的操作指令可用于以下类型的传送：
+
+* 立即数传送给通用寄存器
+* 立即数传送给内存
+* 通用寄存器传送给另一个通用寄存器
+* 通用寄存器传送给段寄存器
+* 段寄存器传送给通用寄存器
+* 通用寄存器传送给控制寄存器
+* 控制寄存器传送给通用寄存器
+* 通用寄存器传送给调试寄存器
+* 调试寄存器传送给通用寄存器
+* 内存位置传送给通用寄存器
+* 内存位置传送给段寄存器
+* 通用寄存器传送给内存位置
+* 段寄存器传送给内存位置
+
+### 5.2.2 立即数传送给寄存器和内存
+
+立即数的每个值前面需要加上`$`符号
+例子：
+
+```x86asm
+movl $0, %eax ;move the value 0 to he eax register
+movl $0x80, %ebx ;move the hexadecimal value 80 to the ebx register
+movl $100, height ;move the value 100 to the height memory location
+
+```
+
+### 5.2.3 在寄存器之间传递数据
+8个通用寄存器eax,ebx,ecx,edx,edi,esi,ebp,esp是用于保存数据的最常用寄存器，这些寄存器内容可以传送给可用的任何其他类型寄存器，和通用寄存器不同，专用寄存器只能传送给通用寄存器，或者接收通用寄存器传送过来的内容。
+
+```x86asm
+movl %eax, %ecx # move 32-bits
+movw %ax, %cx #move 16-bits
+```
+
+
+### 5.2.4 在内存和寄存器之间传送数据
+
+1 把数值从内存传送到寄存器
+
+`movl value, %eax`
+
+指令把value标签指定的内存位置的数值传送给eax,传送value标签引用的内存位置开始的4字节数据，`movb`用于1字节，`movw`用于2字节
+
+```x86asm
+.section .data
+value:
+.int 1
+.section .text
+.globl _start
+_start:
+nop
+movl value, %ecx
+movl $1, %eax
+movl $0, %ebx
+int $0x80
+
+```
+
+
+2 把数值从寄存器传送给内存
+
+`movl %ecx, value`
+
+指令把ecx寄存器里的4字节数据传送给value标签指定内存位置
+
+3 使用变址的内存位置
+
+```x86asm
+values:
+.int 10,15,20,25,30,35,40,45,50,55,60
+
+```
+变址内存模式，内存位置由以下因素确定
+
+* 基址
+* 添加到基址上的偏移地址
+* 数据元素的长度
+* 确定选择哪个数据元素的变址
+
+表达式的格式：`base_address (offset_address,index,size)`
+获取的数值位于：`base_address+offset_address_index * size`
+
+例子，引用values数组中20：
+
+```x86asm
+movl $2, %edi
+movl values(, %edi,4), %eax
+```
+
+例子，输出values数组中的数值
+
+```x86asm
+.section .data
+output:
+.asciz "The value is %d\n"
+values:
+.int 10,15,20,25,30,35,40,45,50,55,60
+.section .text
+.globl _start
+_start:
+nop
+movl $0,%edi
+loop:
+movl values(,%edi,4),%eax
+pushl %eax
+pushl $output
+call printf
+addl $8,%esp
+inc %edi
+cmpl $11,%edi
+jne loop
+movl $0, %ebx
+movl $1, %eax
+int $0x80
+```
+
+```x86asm
+#mac下
+.section __DATA,__data
+output:
+.asciz "The value is %d\n"
+values:
+.int 10,15,20,25,30,35,40,45,50,55,60
+.section __TEXT,__text
+.globl _main
+_main:
+nop
+movl $0,%edi
+loop:
+movl values(,%edi,4),%eax
+pushl %eax
+pushl $output
+call _printf
+addl $8,%esp
+inc %edi
+cmpl $11,%edi
+jne loop
+movl $0, %ebx
+movl $1, %eax
+int $0x80
+
+```
+
+![enter description here][3] 
+
+4 使用寄存器间接寻址
+
+使用指针访问存储在内存位置中的数据称为间接寻址(indirect addressing)
+
+当使用标签引用内存位置中包含的数值时，可以通过在指令中的标签加上`$`符号获取数值的内存位置的地址
+
+`movl $values, %edi`
+
+用于把values标签引用的内存地址传送给edi寄存器
+**在平坦内存模型中，所有内存地址都是使用32位数字表示的**
+
+`movl %ebx, (%edi)`
+
+如果edi寄存器外边没有括号，指令只是把ebx寄存器内容加载到edi寄存器中，如果edi寄存器外边有括号，那么指令就把ebx寄存器的内容传送给edi寄存器中包含的内存位置
+
+`movl %edx, 4(%edi)`
+
+这条指令把edx值放在edi寄存器指向位置之后的4字节内存位置，也可以放到相反方向：
+
+`movl %edx, -4(%edi)`**此处有疑问书中写的是`-4(&edi)`**
+
+演示间接寻址模式：
+
+```x86asm
+;➜  as -gstabs -o movtest.o mvotest4.s 
+;➜  ld movtest.o -e _start -o movtest
+.section .data
+values:
+.int 10,15,20,25,30,35,40,45,50,55,60
+.section .text
+.globl _start
+_start:
+nop
+movl values,%eax
+movl $values, %edi
+movl $100, 4(%edi)
+movl $1, %edi
+movl values(,%edi,4), %ebx
+movl $1,%eax
+int $0x80
+
+```
+可以通过echo命令查看程序退出码
+
+```bash
+➜  asm  ./movtest  
+➜  asm  echo $?
+100
+```
+
+## 5.3 条件传送指令
+
+条件传送指令功能是mov指令发生在特定的条件下。
+
+旧式的汇编语言中会看到下面代码：
+
+```x86asm
+    dec %ecx ;ecx递增1 如果ecx寄存器没有溢出 进位标志没有设置位1
+    jz continue ;jnc指令跳转continue
+    movl $0, %ecx ;如果溢出了 ecx设置为0
+continue:
+```
+
+条件传送指令可以避免处理jmp指令，提高速度
+
+
+### 5.3.1 cmov 指令
+
+指令格式如下： `cmovx source, destination`
+
+x是一个或者两个字母的代码，表示将触发传送操作的条件，条件取决于eflags寄存器当前值：
+
+| EFLAGS | 名称               | 描述                             |
+| ------ | ------------------ | -------------------------------- |
+| CF     | 进位(carry)标志    | 进位或者借位                     |
+| OF     | 溢出overflow标志   | 整数值过大或者过小               |
+| PF     | 奇偶校验parity标志 | 寄存器包含数学操作造成的错误数据 |
+| SF     | 符号标志           | 指出结果为正还是负               |
+| ZF     | 零zero标志         |                                  |
+
+![enter description here][4]
+
+![enter description here][5]
+
+
+
+### 5.3.2 使用comv指令
+
+下面是选择整数中最大一个的程序
+
+```x86asm
+.section .data
+output:
+.asciz "The largest value is %d\n"
+values:
+.int 105,222,23,56,52,445,25,53,117,5
+.section .text
+.globl main
+main:
+nop
+movl values, %ebx
+movl $1, %edi
+loop:
+movl values(,%edi,4), %eax
+cmp %ebx,%eax
+cmova %eax,%ebx
+inc %edi
+cmp $10, %edi
+jne loop
+pushl %ebx
+pushl $output
+call printf
+addl $8, %esp
+pushl $0
+call exit
+```
+
+
+## 5.4交换数据
+
+![enter description here][6]
+
+如果需要交换两个寄存器的数据，指令码就像下面这样：
+
+```x86asm
+movl %eax, %ecx
+movl %ebx, %eax
+movl %ecx, %ebx
+```
+需要增加一个临时保存数据的寄存器来交换数据，数据交换指令就解决了这个问题
+
+
+
+### 5.4.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+  [1]: ./images/QQ20160201-0.png "QQ20160201-0.png"
+  [2]: ./images/QQ20160202-0.png "QQ20160202-0.png"
+  [3]: ./images/QQ20160210-0.png "QQ20160210-0.png"
+  [4]: ./images/QQ20160210-1.png "QQ20160210-1.png"
+  [5]: ./images/QQ20160210-2.png "QQ20160210-2.png"
+  [6]: ./images/QQ20160210-3.png "QQ20160210-3.png"
