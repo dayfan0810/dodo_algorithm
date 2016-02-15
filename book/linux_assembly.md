@@ -578,9 +578,80 @@ movl %ecx, %ebx
 ### 5.4.1
 
 
+| 指令      | 描述                                               |
+| --------- | -------------------------------------------------- |
+| XCHG      | 在两个寄存器之间或者寄存器和内存位置之间交换       |
+| BSWAP     | 反转一个32位寄存器中的字节顺序                     |
+| XADD      | 交换两个值并且把总和存储在目标操作数中             |
+| CMPXCHG   | 把一个值和一个外部值进行比较，并且交换它和另一个值 |
+| CMPXCHG8B | 比较两个64位值并且交换他们                         |
 
 
+#### 1. XCHG
+在两个通用寄存器之间或者寄存器和内存位置之间交换数据值。
+格式如下：
+`xchg operand1, operand2`
+operand1或者operand2可以是通用寄存器，也可以是内存位置**(但是二者不能都是内存位置)**，可以对任何通用的8，16，32位寄存器使用这个命令，但是两个操作数的长度*必须相同*
+当一个操作数是*内存*位置时，处理器LOCK信号被自动标明，防止在交换过程中任何其他处理器访问这个内存位置。
+*XCHG指令可能对程序性能有不良影响*
 
+#### 2. BSWAP
+
+![BSWAP][7]
+第0-7位和第24-31位进行交换，第8-15位和第6-23位交换
+
+例子：
+```x86asm
+.section .text
+.globl _start
+_start:
+nop
+movl $0x12345678, %ebx
+bswap %ebx
+movl $1, %eax
+int $0x80
+
+```
+运行结果：
+
+```bash
+➜  asm  gcc -o swaptest -gstabs swaptest.s
+➜  asm  ./swaptest 
+➜  asm  gdb -q swaptest 
+Reading symbols from swaptest...done.
+(gdb) break *main+1
+Breakpoint 1 at 0x80483bc: file swaptest.s, line 5.
+(gdb) run
+Starting program: /home/dodola/asm/swaptest 
+
+Breakpoint 1, main () at swaptest.s:5
+5	movl $0x12345678, %ebx
+(gdb) step
+6	bswap %ebx
+(gdb) print/x $ebx
+$1 = 0x12345678
+(gdb) step
+7	movl $1, %eax
+(gdb) print/x $ebx
+$2 = 0x78563412
+(gdb) 
+
+
+```
+
+#### 3. XADD
+
+XADD指令用于交换两个寄存器或者内存位置和寄存器的值，把两个值相加，然后把结果存储在目标位置（寄存器或者内存位置），指令格式：
+
+`xadd source, destination`
+
+其中source*必须*是寄存器，destination可以是寄存器也可以是内存位置，并且destination包含相加的结果。
+
+
+#### 4. CMPXCHG
+//待
+#### 5. CMPXCHG8B
+//待
 
 
 
@@ -595,3 +666,4 @@ movl %ecx, %ebx
   [4]: ./images/QQ20160210-1.png "QQ20160210-1.png"
   [5]: ./images/QQ20160210-2.png "QQ20160210-2.png"
   [6]: ./images/QQ20160210-3.png "QQ20160210-3.png"
+  [7]: ./images/5-3.png "5-3.png"
