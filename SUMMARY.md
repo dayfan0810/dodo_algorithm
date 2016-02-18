@@ -33,5 +33,5 @@
 * [设计模式](design_patterns.md)
 * [Swift](swift/swift.md)
 * [OpenGL](opengl/opengl.md)
-* Kotlin
+* [Kotlin](Kotlin/README.md)
 
