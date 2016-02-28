@@ -256,8 +256,63 @@ val s = "abc"
 val str = "$s.length is ${s.length}"
 //结果为 abc.length is 3
 ```
+## 1.2 数组
 
-## 1.2 基本语法
+### 创建数组
+
+指定长度 
+
+```kotlin
+    val sizeArray=arrayOfNulls<Int>(5)//sizeArray: Integer[5]{null}
+    val sizeArray1=IntArray(5)//sizeArray1: {0,0,0,0,0}
+    //同样的类型还有:BooleanArray,ByteArray,IntArray,CharArray,DoubleArray,FloatArray,LongArray,ShortArray,
+```
+使用值创建
+
+```kotlin
+ //使用装箱操作
+    val sizeArray2=arrayOf(1,2,3,4,5)
+    /**
+    sizeArray2: Integer[]
+    0 = {Integer@447} "1"
+    1 = {Integer@448} "2"
+    2 = {Integer@449} "3"
+    3 = {Integer@450} "4"
+    4 = {Integer@451} "5"
+    **/
+    //下面方法创建的数组是未装箱的
+    val sizeArray3=intArrayOf(1,2,3,4,5)//sizeArray3:int[5] {1,2,3,4,5}
+    //同类的方法还有
+    //booeanArrayOf,byteArrayOf,doubleArrayOf,floatArrayOf,intArrayOf,longArrayOf,shortArrayOf
+```
+空数组
+
+```kotlin
+    val emptyArray=emptyArray<Int>()//emptyArray: Integer[0]
+```
+### 访问数组
+
+```kotlin
+val arr = arrayOf(1, 2, 3)
+println(asc[1])         //  1
+println(asc.get(1))     //  1
+```
+
+### 遍历数组
+
+```kotlin
+for(i in arr){
+    println(i)
+}
+//1 2 3
+for(j in asc.indices){
+    println(j)
+}
+//0 1 2 
+```
+
+
+## 1.3 基本语法
 
 ### 定义包名
 
@@ -301,18 +356,30 @@ fun pow(a:Int)= Math.pow(a.toDouble(),2.toDouble());
 用`val`声明只读变量：
 
 ```kotlin
+
+//-------in kotlin---------
 val a:Int=1
 val b = 1
 val c:Int //声明
 c=1
 c=2//ERROR: val 只能赋值一次，这里会造成编译错误
+
+//--------in java---------
+
+final int a=1;
+
 ```
 
 使用`var`声明可变变量：
 
 ```kotlin
+//--------in kotlin-------
 var x=5
 x+=1
+
+
+//--------in java ---------
+int x=5;
 ```
 
 ### 字符串模板
@@ -452,7 +519,7 @@ if (x !in 0..array.lastIndex)
 val sumLambda: (Int, Int) -> Int = {x,y -> x+y}
 ```
 
-## 1.3 包
+## 1.4 包
 
 ### 声明包
 ```kotlin
@@ -472,7 +539,7 @@ import foo.Bar // Bar 可以使用
 import bar.Bar as bBar // bBar 代表 'bar.Bar'
 ```
 
-## 1.4 控制流
+## 1.5 控制流
 
 ### if表达式
 
@@ -505,11 +572,154 @@ else{
 
 ```
 
+### when 表达式
+
+一般用法,用来替代 switch,需注意的是里面的条件可以重复,如果条件重复的话则按照最先匹配的条件处理
+```kotlin
+	val x=2
+	when(x){
+		1->print("1")
+		2->print("2")
+		else->print("else")//文档里写else 是mandatory的,但是去掉也可以
+	}
+	
+```
+
+如果多个条件的处理方式一样,可以写作下面方式:
+
+```kotlin
+when (x) {
+    0,1 -> print("x == 0 or x == 1")
+    else -> print("otherwise")
+}
+```
+
+可以用任意表达式作为分支的条件
+```kotlin
+when (x) {
+    parseInt(s) -> print("s encode x")
+    else -> print("s does not encode x")
+}
+```
+可以用 in 或者 !in 检查值是否值在一个集合中：
+```kotin
+when (x) {
+    in 1..10 -> print("x is in the range")
+    in validNumbers -> print("x is valid")
+    !in 10..20 -> print("x is outside the range")
+    else -> print("none of the above")
+}
+```
+可以使用 is 判断是否是某个类型:
+
+```kotlin
+//官方的这个例子写的很奇怪,感觉为了使用 when 来故意这么写的
+
+val hasPrefix = when (x) {
+    is String -> x.startsWith("prefix")
+    else -> false
+}
+//上面的例子可以直接写成
+val hasPrefix=x.startsWith("prefix")
 
 
+//下面的例子可能更好一些
+	var a=B()
+		when(a){
+			is C->print("A")
+			is B->print("B")
+			is A->print("C")
+		}
+
+    open class A{
+    	
+    }
+    open class B:A(){
+    	
+    }
+    class C:B(){
+    	
+    }
 
 
+```
+when 也可以用来代替 if-else, 如果没有提供任何参数则分支的条件就是表达式
+```kotlin
+when {
+    x.isOdd() -> print("x is odd")
+    x.isEven() -> print("x is even")
+    else -> print("x is funny")
+}
+```
+测试例子:
 
+```kotlin
+fun main(args: Array<String>) {
+	var x=3
+	when(x){
+		
+		1->println("1->1")
+		2->{
+			x=3
+			println("2->${x}")
+		}
+		3,4,5->println("3,4,5->")
+		test()->println("test()->${test()}")
+		in 7..10->println("6..10->${x}")
+		}	
+		
+		var a=B()
+		when(a){
+			is C->print("A")
+			is B->print("B")
+			is A->print("C")
+		}
+		
+
+}
+
+open class A{
+	
+}
+open class B:A(){
+	
+}
+class C:B(){
+	
+}
+
+fun test():Int{
+	println("=====test====")
+	return 6
+}
+
+```
+### for 
+```kotlin
+for (item in collection)
+    print(item)
+    
+for (i in array.indices)
+    print(array[i])
+```
+
+### while
+```kotlin
+```
+
+
+## 返回与跳转
+
+##标签
+
+标签相当于 C语言 中的 label,通过@结尾来表示,比如 `abc@`
+
+```kotlin
+loop@ for(i in 1..100){
+    //
+}
+```
+声明了标签之后可以使用 break 或者 continue 进行跳转:
 
 
 
