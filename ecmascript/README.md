@@ -76,7 +76,7 @@ function () {
   let a = 10;
   let a = 1;
 }
-//因此，不能在函数内部重新声明参数。
+//因此，不能在函数内部重新声明参数。d[s
 
 function func(arg) {
   let arg; // 报错
@@ -892,3 +892,773 @@ m2({z: 3}) // [undefined, undefined]
 
 ```
 
+**参数默认值的位置**
+
+
+非尾部参数设置默认值，这个参数是无法省略的
+
+```javascript
+function f(x = 1, y) {
+  return [x, y];
+}
+///////
+function f(x, y) {
+  if (x === undefined) x = 1;
+
+  return [x, y];
+}
+
+
+f() // [1, undefined]
+f(2) // [2, undefined])
+f(, 1) // 报错,其实本身这种语法就是错误的
+f(undefined, 1) // [1, 1]
+
+function f(x, y = 5, z) {
+  return [x, y, z];
+}
+
+f() // [undefined, 5, undefined]
+f(1) // [1, 5, undefined]
+f(1, ,2) // 报错
+f(1, undefined, 2) // [1, 5, 2]
+
+```
+
+**函数的length属性**
+
+指定了默认值以后，函数的length属性，将返回没有指定默认值的参数个数
+
+```javascript
+(function(a){}).length // 1
+(function(a = 5){}).length // 0
+(function(a, b, c = 5){}).length // 2
+
+```
+
+**默认值参数作用域**
+
+总结起来就是参数使用的变量已经生成则作用域是函数作用域否则更上层的作用域的变量已经生成则使用的是上层作用域的值，如果全局内都没有此变量存在则会报错
+
+情况1：
+```javascript
+var x = 1;
+
+function f(x, y = x) {
+  console.log(y);
+}
+
+f(2) // 2
+
+```
+情况2：
+```javascript
+let x = 1;
+
+function f(y = x) {
+  let x = 2;
+  console.log(y);
+}
+
+f() // 1
+
+```
+情况3：
+```javascript
+
+function f(y = x) {
+  let x = 2;
+  console.log(y);
+}
+
+f() // ReferenceError: x is not defined
+
+```
+
+## 2. rest参数
+
+就是`...变量名`形式的参数，表示不定数量的参数
+
+
+```javascript
+function add(...values) {
+  let sum = 0;
+
+  for (var val of values) {
+    sum += val;
+  }
+
+  return sum;
+}
+
+add(2, 5, 3) // 10
+
+```
+
+**rest参数后不能再有其他参数**
+
+```javascript
+
+// 报错
+function f(a, ...b, c) {
+  // ...
+}
+```
+
+**注意函数的length属性不包括rest参数**
+
+```javascript
+(function(a) {}).length  // 1
+(function(...a) {}).length  // 0
+(function(a, ...b) {}).length  // 1
+
+```
+
+## 3. 扩展运算符(spread)
+
+扩展运算符用`...`表示，用于将一个数组转换为逗号分隔的参数序列。
+
+```javascript
+console.log(...[1, 2, 3])//console.log(1,2,3)
+// 1 2 3
+
+console.log(1, ...[2, 3, 4], 5)
+// 1 2 3 4 5
+
+```
+
+**主要用于函数调用**
+
+```javascript
+//多么扭曲的例子=_=
+function f(v, w, x, y, z) { }
+var args = [0, 1];
+f(-1, ...args, 2, ...[3]);
+```
+
+
+**替代apply方法**
+
+```javascript
+// ES5的写法
+function f(x, y, z) {
+  // ...
+}
+var args = [0, 1, 2];
+f.apply(null, args);
+
+// ES6的写法
+function f(x, y, z) {
+  // ...
+}
+var args = [0, 1, 2];
+f(...args);
+
+// ES5的写法
+Math.max.apply(null, [14, 3, 77])
+
+// ES6的写法
+Math.max(...[14, 3, 77])
+
+// 等同于
+Math.max(14, 3, 77);
+
+```
+
+**合并数组**
+
+```javascript
+// ES5
+[1, 2].concat(more)
+// ES6
+[1, 2, ...more]
+
+var arr1 = ['a', 'b'];
+var arr2 = ['c'];
+var arr3 = ['d', 'e'];
+
+// ES5的合并数组
+arr1.concat(arr2, arr3));
+// [ 'a', 'b', 'c', 'd', 'e' ]
+
+// ES6的合并数组
+[...arr1, ...arr2, ...arr3]
+// [ 'a', 'b', 'c', 'd', 'e' ]
+
+```
+
+**扩展解构赋值**
+
+```javascript
+const [first, ...rest] = [1, 2, 3, 4, 5];
+first // 1
+rest  // [2, 3, 4, 5]
+
+const [first, ...rest] = [];
+first // undefined
+rest  // []:
+
+const [first, ...rest] = ["foo"];
+first  // "foo"
+rest   // []
+
+```
+需要注意的是将扩展运算符用于数组赋值则只能放在参数最后一位，否则会报错
+
+```javascript
+
+const [...butLast, last] = [1, 2, 3, 4, 5];
+// 报错
+
+const [first, ...middle, last] = [1, 2, 3, 4, 5];
+// 报错
+```
+
+**map set结构**
+
+
+
+```javascript
+let map = new Map([
+  [1, 'one'],
+  [2, 'two'],
+  [3, 'three'],
+]);
+
+let arr = [...map.keys()]; // [1, 2, 3]
+
+```
+
+
+## 4. name属性
+
+用于返回该函数的函数名
+
+```javascript
+var func1 = function () {};
+
+// ES5
+func1.name // ""
+
+// ES6
+func1.name // "func1"
+```
+## 5.箭头函数
+
+es6可以使用`=>`定义函数, `=>` 左边代表参数名
+
+```javascript
+var f=v=>v;
+
+///等价于///
+
+var f = function(v) {
+  return v;
+};
+
+```
+
+如果箭头函数不需要参数或者需要多个参数,使用括号代表参数部分
+
+```javascript
+var f = () => 5;
+// 等同于
+var f = function (){ return 5 };
+
+var sum = (num1, num2) => num1 + num2;
+// 等同于
+var sum = function(num1, num2) {
+  return num1 + num2;
+};
+
+```
+
+如果方法体多于一行,则需要用`{}`并使用return 返回
+
+```javascript
+var sum = (num1, num2) => { return num1 + num2; }
+
+///////
+var sum = function sum(num1, num2) {
+  return num1 + num2;
+};
+
+```
+
+如果箭头部分直接返回对象,则必须在对象外边加上括号
+
+
+```javascript
+var getTempItem = id => ({id:id,name:"Temp"});
+///////
+var getTempItem = function getTempItem(id) {
+  return { id: id, name: "Temp" };
+};
+
+```
+
+## 6. 函数绑定
+
+函数绑定运算符是`::`,双冒号左边是对象,右边是一个函数,运算符会自动将左边的对象作为上下文环境,绑定到右边的函数上
+```javascript
+
+foo::bar;
+// 等同于
+bar.bind(foo);
+
+foo::bar(...arguments);
+// 等同于
+bar.apply(foo, arguments);
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+function hasOwn(obj, key) {
+  return obj::hasOwnProperty(key);
+}
+
+```
+如果双冒号左边为空，右边是一个对象的方法，则等于将该方法绑定在该对象上面。
+
+```javascript
+var method = obj::obj.foo;
+// 等同于
+var method = ::obj.foo;
+
+let log = ::console.log;
+// 等同于
+var log = console.log.bind(console);
+
+```
+
+
+## 7. 尾调用优化
+
+尾调用（Tail Call）是函数式编程的一个重要概念,就是指某个函数的最后一步是调用另一个函数。
+
+
+```javascript
+function f(x){
+  return g(x);
+}
+
+```
+
+尾调用优化即只保留内层函数的调用帧.
+
+如下例子,g函数调用后f就结束,则在最后执行g的时候f可以不用保留
+
+```javascript
+function f() {
+  let m = 1;
+  let n = 2;
+  return g(m + n);
+}
+f();
+
+// 等同于
+function f() {
+  return g(3);
+}
+f();
+
+// 等同于
+g(3);
+
+```
+
+**尾递归**
+
+通过尾调用优化可以节省尾递归产生的栈内存
+
+
+```javascript
+
+function factorial(n, total) {
+  if (n === 1) return total;
+  return factorial(n - 1, n * total);
+}
+
+factorial(5, 1) // 120
+```
+
+
+**尾调用优化只在严格模式下开启**
+
+
+# 六. 对象
+
+
+# 七. Proxy和Reflect
+
+# 八. Set和Map数据结构
+
+
+## 1. Set
+
+**初始化**
+
+```javascript
+var s = new Set();
+
+var set = new Set([1, 2, 3, 4, 4])
+
+
+
+```
+添加数据
+
+```javascript
+var s = new Set();
+
+s.add(1);
+
+```
+
+
+两个对象总是不相等的。
+```javascript
+let set = new Set();
+
+set.add({})
+set.size // 1
+
+set.add({})
+set.size // 2
+
+```
+
+**操作方法:**
+
+* add(value)：添加某个值，返回Set结构本身。
+* delete(value)：删除某个值，返回一个布尔值，表示删除是否成功。
+* has(value)：返回一个布尔值，表示该值是否为Set的成员。
+* clear()：清除所有成员，没有返回值。
+
+
+```javascript
+
+s.add(1).add(2).add(2);
+// 注意2被加入了两次
+
+s.size // 2
+
+s.has(1) // true
+s.has(2) // true
+s.has(3) // false
+
+s.delete(2);
+s.has(2) // false
+
+````
+
+
+**遍历操作:**
+
+* keys()：返回一个键名的遍历器
+* values()：返回一个键值的遍历器
+* entries()：返回一个键值对的遍历器
+* forEach()：使用回调函数遍历每个成员
+
+
+```javascript
+let set = new Set(['red', 'green', 'blue']);
+
+for ( let item of set.keys() ){
+  console.log(item);
+}
+// red
+// green
+// blue
+
+for ( let item of set.values() ){
+  console.log(item);
+}
+// red
+// green
+// blue
+
+for ( let item of set.entries() ){
+  console.log(item);
+}
+// ["red", "red"]
+// ["green", "green"]
+// ["blue", "blue"]
+
+```
+
+
+
+## 2. Map
+
+**初始化**
+
+```javascript
+
+var m = new Map();
+var o = {p: "Hello World"};
+
+m.set(o, "content")
+m.get(o) // "content"
+
+m.has(o) // true
+m.delete(o) // true
+m.has(o) // false
+
+
+var map = new Map([["name", "张三"], ["title", "Author"]]);
+
+map.size // 2
+map.has("name") // true
+map.get("name") // "张三"
+map.has("title") // true
+map.get("title") // "Author"
+
+```
+
+
+**操作方法**
+
+* `size`属性: 返回Map成员总数
+* `set(key, value)`:设置key所对应的键值
+* `get(key)`:读取key对应的键值如果找不到key，返回undefined
+* `has(key)`:返回一个布尔值，表示某个键是否在Map数据结构中
+* `delete(key)`:删除某个键，返回true。如果删除失败，返回false
+* `clear()`:方法清除所有成员，没有返回值
+
+
+**遍历方法**
+
+* keys()：返回键名的遍历器。
+* values()：返回键值的遍历器。
+* entries()：返回所有成员的遍历器。
+* forEach()：遍历Map的所有成员。
+
+```javascript
+let map = new Map([
+  ['F', 'no'],
+  ['T',  'yes'],
+]);
+
+for (let key of map.keys()) {
+  console.log(key);
+}
+// "F"
+// "T"
+
+for (let value of map.values()) {
+  console.log(value);
+}
+// "no"
+// "yes"
+
+for (let item of map.entries()) {
+  console.log(item[0], item[1]);
+}
+// "F" "no"
+// "T" "yes"
+
+// 或者
+for (let [key, value] of map.entries()) {
+  console.log(key, value);
+}
+
+// 等同于使用map.entries()
+for (let [key, value] of map) {
+  console.log(key, value);
+}
+
+```
+
+
+**与其他结构互转**(TODO:)
+
+
+# 九. Class
+
+# 十. 异步
+
+JS 是单线程模型的,在浏览器环境下 JS和其他浏览器任务共享同一个线程,在一个任务执行过程中会阻塞其他任务.
+
+我们不能阻塞主线程太长时间,异步就是用来解决这种情况的.
+
+常见的异步编程有以下四种:
+- 回调函数
+- 事件监听
+- 发布/订阅
+- Promise 对象
+
+
+
+## 1. 回调函数
+
+
+## 2. 事件监听
+
+在浏览器下的 js 编程中我们经常会写到这样的事件监听代码
+
+
+```javascript
+
+var image1=document.querySelector('.img-1');
+
+image1.addEventListener('load',()={
+//图片加载完成
+});
+
+image1.addEventListener('error',()=>{
+//出现错误
+})
+```
+
+
+## 3. 发布/订阅
+
+
+## 4. Promise(重要!!)
+
+Promise 是异步编程的一种解决方案
+
+
+Promise 与事件监听对比来说有以下特点:
+
+* 一个 Promise 只能成功或者失败一次,他不能从成功到失败的转换,反之亦然
+* 如果在一个 Promise 成功或者失败后添加了相应的回调函数,那么该回调还是会被立即执行.事件监听机制则不能实现该效果,事件错过了再去监听是无法得到结果的
+
+**Promise 优点**:
+* 可以将异步操作以同步操作的流程表达出来，避免了层层嵌套的回调函数
+* Promise对象提供统一的接口，使得控制异步操作更加容易
+
+**Promise 缺点**:
+
+* 无法取消Promise，一旦新建它就会立即执行，无法中途取消。
+* 如果不设置回调函数，Promise内部抛出的错误，不会反应到外部。
+* 当处于Pending状态时，无法得知目前进展到哪一个阶段
+
+
+**Promise有四种状态**
+* fulfilled: 操作成功
+* rejected: 操作失败
+* pending: 操作进行中还没有得到结果
+* settled: Promise已经被 fulfiled 或 rejected, 且并不是 pending.
+
+
+### 4.1 基本用法
+
+生成 Promise 实例
+```javascript
+var promise = new Promise(function(resolve, reject) {
+  // ... some code
+
+  if (/* 异步操作成功 */){
+    resolve(value);
+  } else {
+    reject(error);
+  }
+});
+
+```
+
+
+Promise 构造函数接受一个函数作为参数,该函数有两个参数`resolve`和`reject`.这两个函数由 JS 引擎提供不用自己部署.
+
+`resolve`函数作用是将 Promise 对象的状态从**未完成(Pending)**变成**成功(Reolved)**在异步操作成功时调用，并将异步操作的结果，作为参数传递出去；reject函数的作用是，将Promise对象的状态**未完**变为**失败**，在异步操作失败时调用，并将异步操作报出的错误，作为参数传递出去。
+
+Promise实例生成以后，可以用then方法分别指定Resolved状态和Reject状态的回调函数。
+
+
+### 4.2 链式调用
+
+`then`方法返回的是一个新的 Promise 实例(**不是原来的 Promise 实例**),所以可以采用链式写法:
+
+```javascript
+getJSON("/posts.json").then(function(json) {
+  return json.post;
+}).then(function(post) {
+  // ...
+});
+
+```
+
+举个例子:
+
+```javascript
+var p=new Promise((resolve,reject)=>{
+  resolve(1);
+});
+p.then(val=>val+2).then(val=>{console.log(val)})
+//3
+
+```
+
+### 4.3 异步操作队列
+
+
+
+
+### 4.3 例子
+
+异步加载图片的例子。
+
+```javascript
+
+function loadImageAsync(url) {
+  return new Promise(function(resolve, reject) {
+    var image = new Image();
+
+    image.onload = function() {
+      resolve(image);
+    };
+
+    image.onerror = function() {
+      reject(new Error('Could not load image at ' + url));
+    };
+
+    image.src = url;
+  });
+}
+
+let asyncLoad=loadImageAsync('http://www.baidu.com/img/270new_2219485be6054791b9649fd0d423545f.png')
+asyncLoad.then(image=>{
+console.log('success')
+},error=>{
+console.log(error);
+})
+
+
+```
+
+
+Ajax 例子
+
+
+```javascript
+
+var getJSON = function(url) {
+  var promise = new Promise(function(resolve, reject){
+    var client = new XMLHttpRequest();
+    client.open("GET", url);
+    client.onreadystatechange = handler;
+    client.responseType = "json";
+    client.setRequestHeader("Accept", "application/json");
+    client.send();
+
+    function handler() {
+      if ( this.readyState !== 4 ) {
+        return;
+      }
+      if (this.status === 200) {
+        resolve(this.response);
+      } else {
+        reject(new Error(this.statusText));
+      }
+    };
+  });
+
+  return promise;
+};
+
+getJSON("/posts.json").then(function(json) {
+  console.log('Contents: ' + json);
+}, function(error) {
+  console.error('出错了', error);
+});
+```
