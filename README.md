@@ -1,5 +1,6 @@
-Dodola 的学习笔记
+Dodola 的学习计划
 =======
 
-各种读书笔记
+Java !
+Android!
 
